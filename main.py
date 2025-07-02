@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Response , status ,HTTPException
 from fastapi.params import Body
 from pydantic import BaseModel
 from typing import Optional
@@ -46,7 +46,8 @@ def getUniqueId():
          
          
 def find_post(id):
-    
+    if int(id) > len(my_posts):
+        return None
     my_posts.sort(key=lambda x: x["id"])  # Ensure sorted by ID
     left , right = -1, len(my_posts) + 1
     while left + 1 < right :
@@ -56,9 +57,9 @@ def find_post(id):
         elif my_posts[mid]["id"] < int(id):
             left = mid
         else :
-            rigth = mid
+            right = mid
     
-    raise Exception("Not found")
+    
     
 
 @app.get("/")
@@ -67,9 +68,14 @@ async def root():
 
 
 @app.get("/posts/{id}")
-def get_post_by_id(id):
-    print(id)
+def get_post_by_id(id, response: Response):
     post = find_post(id)
+    if not post:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail = f'{id} not found' )
+        # response.status_code = status.HTTP_404_NOT_FOUND
+        # return {"error" : f'{id} not found'}
+    #id doesn't exist then we show status code and return error message
+    
     return {"data" : post}
 
 
