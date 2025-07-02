@@ -60,7 +60,11 @@ def find_post(id):
             right = mid
     
     
-    
+def find_index(id):
+    for i,p in enumerate(my_posts):
+        if p['id'] == id:
+            return i
+
 
 @app.get("/")
 async def root():
@@ -97,3 +101,28 @@ def create_post(post: Post):
     my_posts.append(post_dict)
     return {"data" : post_dict}
 # expected data from post = title, content
+
+
+@app.delete("/posts/{id}")
+def delete_post(id : int):
+    index = find_index(id)
+    if index is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail=f"post with id : {id} not found")
+    
+    my_posts.pop(index)
+    return Response(status_code=status.HTTP_204_NO_CONTENT) # we are never expected to send data after deletion
+    # if we try to then we will get error
+    
+@app.put("/posts/{id}")
+def update_post(id : int, updatedPost : Post):
+    index = find_index(id)
+    if index is None:
+        raise HTTPException(status_code=status.HTTP_204_NO_CONTENT, detail=f"these is no post with id : {id}")
+    #the current data is not a dictionary so we convert it using mdel_dump()
+    
+    post_dict = updatedPost.model_dump()
+    post_dict['id'] = id
+    my_posts[index] = post_dict
+    return {"data " : post_dict}
+    
+    
